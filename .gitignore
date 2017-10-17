@@ -99,3 +99,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# local docs and notes
+notes.md
