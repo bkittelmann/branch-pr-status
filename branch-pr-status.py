@@ -26,7 +26,7 @@ def prompt(text):
 def get_repo_name(args):
     repo_name_command = "cd %s && git config --get remote.origin.url" % args.repository
     out = text(check_output([repo_name_command], shell=True), "utf-8").strip()
-    matches = re.match(r"git@github\.com:(.+?)\.git", out)
+    matches = re.match(r".*?github\.com[:/](.+?)\.git", out)
     return matches.group(1)
 
 
