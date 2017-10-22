@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from builtins import input
 import getpass
 import re
 from subprocess import check_output
@@ -14,12 +15,9 @@ from termcolor import colored
 description = "Check the status of pull requests corresponding to local branches"
 
 
-try:
-    # Python 2
-    prompt = raw_input
-except NameError:
-    # Python 3
-    prompt = input
+def prompt(text):
+    sys.stderr.write(str(text))
+    return input()
 
 
 def get_repo_name(args):

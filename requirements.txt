@@ -1,3 +1,4 @@
+future==0.16.0
 keyring==10.4.0
 PyGithub==1.35
 PyJWT==1.5.3
