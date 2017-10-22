@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import unicode_literals
 import argparse
 from builtins import input
+from builtins import str as text
 import getpass
 import re
 from subprocess import check_output
@@ -23,7 +25,7 @@ def prompt(text):
 
 def get_repo_name(args):
     repo_name_command = "cd %s && git config --get remote.origin.url" % args.repository
-    out = check_output([repo_name_command], shell=True).strip()
+    out = text(check_output([repo_name_command], shell=True), "utf-8").strip()
     matches = re.match(r"git@github\.com:(.+?)\.git", out)
     return matches.group(1)
 
@@ -58,11 +60,11 @@ def inspect_branches(github, args):
     repo_name = get_repo_name(args)
 
     branch_list_command = "cd %s && git branch -l | grep -v '* ' | grep -v 'master'| xargs -n 1 -I{} git log {} -n1 --oneline --pretty=format:'%%h*%%D\n'" % args.repository
-    out = check_output([branch_list_command], shell=True)
+    out = text(check_output([branch_list_command], shell=True), "utf-8")
 
     branches_with_latest_commits = {}
     for line in out.splitlines():
-        commit_id, ref_names = line.split("*")
+        commit_id, ref_names = str(line).split("*")
         ref_name_list = ref_names.split(", ")
         branches_with_latest_commits[ref_name_list[-1]] = commit_id
 
@@ -72,8 +74,9 @@ def inspect_branches(github, args):
         align_to = len(longest_branch_name) + 1
 
     for branch, commit_id in sorted(branches_with_latest_commits.items()):
-        results = github.search_issues("repo:%s %s" % (repo_name, commit_id))
-        if results.totalCount > 0:
+        query = "repo:%s %s" % (repo_name, commit_id)
+        results = github.search_issues(query)
+        if len(list(results)) > 0:
             issue = results[0]
 
             # see https://github.com/PyGithub/PyGithub/issues/572
@@ -126,7 +129,7 @@ def query_github(user_name, token, args, on_login_success=no_operation, on_login
         github = authenticate(user_name, token)
         on_login_success(user_name, token)
         inspect_branches(github, args)
-    except BadCredentialsException, ex:
+    except BadCredentialsException as ex:
         on_login_failure()
         sys.exit(1)
 
