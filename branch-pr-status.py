@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import argparse
 from builtins import input
 import getpass
@@ -40,17 +41,17 @@ def format_status(pull_request):
 
 def print_pr_found(commit_id, last_ref_name, pull_request):
     status = format_status(pull_request)
-    print "%s %s '%s', %s, %s" % (commit_id, last_ref_name, pull_request.title, status, pull_request.html_url)
+    print("%s %s '%s', %s, %s" % (commit_id, last_ref_name, pull_request.title, status, pull_request.html_url))
 
 
 def print_pr_found_minimal(commit_id, last_ref_name, pull_request, align_to = None):
     status = "merged" if pull_request.merged else pull_request.state
     output_format = "%%-%ss %%s" % align_to if align_to is not None else "%s %s"
-    print output_format % (last_ref_name, status)
+    print(output_format % (last_ref_name, status))
 
 
 def print_no_pr_found(commit_id, last_ref_name):
-    print "%-50s" % last_ref_name
+    print("%-50s" % last_ref_name)
 
 
 def inspect_branches(github, args):
