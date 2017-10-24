@@ -52,8 +52,9 @@ def print_pr_found_minimal(commit_id, last_ref_name, pull_request, align_to = No
     print(output_format % (last_ref_name, status))
 
 
-def print_no_pr_found(commit_id, last_ref_name):
-    print("%-50s" % last_ref_name)
+def print_no_pr_found(commit_id, last_ref_name, align_to = None):
+    output_format = "%%-%ss -" % align_to if align_to is not None else "%s -"
+    print(output_format % last_ref_name)
 
 
 def inspect_branches(github, args):
