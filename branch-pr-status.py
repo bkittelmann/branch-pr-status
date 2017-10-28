@@ -7,9 +7,10 @@ from builtins import input
 from builtins import str as text
 import getpass
 import re
-from subprocess import check_output
 import sys
 
+from dulwich import porcelain
+from dulwich.repo import Repo
 from github import Github, GithubException, BadCredentialsException
 import keyring
 from termcolor import colored
@@ -23,11 +24,21 @@ def prompt(text):
     return input()
 
 
-def get_repo_name(args):
-    repo_name_command = "cd %s && git config --get remote.origin.url" % args.repository
-    out = text(check_output([repo_name_command], shell=True), "utf-8").strip()
-    matches = re.match(r".*?github\.com[:/](.+?)\.git", out)
+def get_repo_name(repo):
+    config = repo.get_config()
+    remote_origin = config.get(("remote", "origin"), "url")
+    matches = re.match(r".*?github\.com[:/](.+?)\.git", remote_origin)
     return matches.group(1)
+
+
+def get_branch_commits(repo):
+    branches = porcelain.branch_list(repo)
+    branches_with_commits = {}
+    for branch_name in branches:
+        branch_ref = bytes("refs/heads/%s" % branch_name)
+        commits = [entry.commit for entry in repo.get_walker(include=[repo[branch_ref].id], max_entries=1)]
+        branches_with_commits[branch_name] = commits[0].id
+    return branches_with_commits
 
 
 def format_status(pull_request):
@@ -58,16 +69,10 @@ def print_no_pr_found(commit_id, last_ref_name, align_to = None):
 
 
 def inspect_branches(github, args):
-    repo_name = get_repo_name(args)
+    repo = Repo(args.repository)
 
-    branch_list_command = "cd %s && git branch -l | grep -v '* ' | grep -v 'master'| xargs -n 1 -I{} git log {} -n1 --oneline --pretty=format:'%%h*%%D\n'" % args.repository
-    out = text(check_output([branch_list_command], shell=True), "utf-8")
-
-    branches_with_latest_commits = {}
-    for line in out.splitlines():
-        commit_id, ref_names = str(line).split("*")
-        ref_name_list = ref_names.split(", ")
-        branches_with_latest_commits[ref_name_list[-1]] = commit_id
+    repo_name = get_repo_name(repo)
+    branches_with_latest_commits = get_branch_commits(repo)
 
     align_to = None
     if args.align:
