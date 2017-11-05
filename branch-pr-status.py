@@ -31,8 +31,8 @@ def get_repo_name(repo):
     return matches.group(1)
 
 
-def get_branch_commits(repo):
-    branches = porcelain.branch_list(repo)
+def get_branch_commits(repo, ignored_branches):
+    branches = filter(lambda b: b not in ignored_branches, porcelain.branch_list(repo))
     branches_with_commits = {}
     for branch_name in branches:
         branch_ref = bytes("refs/heads/%s" % branch_name)
@@ -72,7 +72,7 @@ def inspect_branches(github, args):
     repo = Repo(args.repository)
 
     repo_name = get_repo_name(repo)
-    branches_with_latest_commits = get_branch_commits(repo)
+    branches_with_latest_commits = get_branch_commits(repo, args.ignored_branches)
 
     align_to = None
     if args.align:
@@ -167,6 +167,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--token")
 
     parser.add_argument("--align", action="store_true", default=False)
+    parser.add_argument("--ignored-branches", nargs="*", default=["master", "develop"])
     parser.add_argument("repository")
 
     if len(sys.argv) == 1:
