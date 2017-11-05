@@ -140,6 +140,26 @@ def query_github(user_name, token, args, on_login_success=no_operation, on_login
         sys.exit(1)
 
 
+def run(args):
+    if args.user and args.token:
+            query_github(args.user, args.token, args, on_login_failure=login_failed)
+    else:
+        credentials = get_credentials()
+        if credentials:
+            user_name, token = credentials
+            query_github(user_name, token, args, on_login_failure=remove_credentials)
+        else:
+            user_name = prompt("Enter GitHub user name: ")
+            token = getpass.getpass(prompt="Enter personal access token: ")
+            query_github(
+                user_name,
+                token,
+                args,
+                on_login_success=store_credentials,
+                on_login_failure=login_failed
+            )
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
 
@@ -153,22 +173,7 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(1)
     else:
-        args = parser.parse_args()
-
-        if args.user and args.token:
-            query_github(args.user, args.token, args, on_login_failure=login_failed)
-        else:
-            credentials = get_credentials()
-            if credentials:
-                user_name, token = credentials
-                query_github(user_name, token, args, on_login_failure=remove_credentials)
-            else:
-                user_name = prompt("Enter GitHub user name: ")
-                token = getpass.getpass(prompt="Enter personal access token: ")
-                query_github(
-                    user_name,
-                    token,
-                    args,
-                    on_login_success=store_credentials,
-                    on_login_failure=login_failed
-                )
+        try:
+            run(parser.parse_args())
+        except KeyboardInterrupt:
+            pass
